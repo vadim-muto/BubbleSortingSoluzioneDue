@@ -1,0 +1,29 @@
+mosse(0..9).
+numMaxMosse(10).
+
+% GUESS
+muovi(C,X,Y,X1,Y1,N) | nonMuovi(C,X,Y,X1,Y1,N) :- in(C,X,Y,M), in(vuota,X1,Y1,M), mosse(M), N=M+1, Y!=Y1, C!=vuota.
+
+% REGOLE
+esistePallinaSopra(X,Y,M) :- muovi(_,X,Y,_,_,M), in(C,X1,Y,N), X1=X-1, N=M-1, C!=vuota.
+coloreValido(Y,M) :- muovi(C,_,_,X,Y,M), in(C,X1,Y,N), X1=X+1, N=M-1.
+coloreValido(Y,M) :- muovi(_,_,_,_,Y,M), #count{X : in(vuota,X,Y,N)}=4, N=M-1.
+primaPosDisponibile(Z,Y,M) :- muovi(_,_,_,_,Y,M), #max{X : in(vuota,X,Y,N)}=Z, N=M-1.
+
+muoviOrigine(X,Y,M) :- muovi(_,X,Y,_,_,M).
+muoviDestinazione(X,Y,M) :- muovi(_,_,_,X,Y,M).
+
+numPallineStessoColore(Y,N,M) :- in(_,_,Y,M), #count{C : in(C,_,Y,M), C!=vuota} = N.
+numPallineNelContainer(Y,N,M) :- in(_,_,Y,M), #count{C,X : in(C,X,Y,M), C!=vuota}=N.
+containerOK(Y,D) :- in(_,_,Y,D), numPallineStessoColore(Y,1,D), numPallineNelContainer(Y,4,D).
+
+% STRONG
+:- muovi(C,X,Y,_,_,M), esistePallinaSopra(X,Y,M).
+:- muovi(_,_,_,_,Y,M), not coloreValido(Y,M).
+:- muovi(_,_,_,X,Y,M), not primaPosDisponibile(X,Y,M).
+:- mosse(M), #count{C,X,Y,X1,Y1 : muovi(C,X,Y,X1,Y1,N)}!=1, N=M+1.
+:- muovi(_,_,_,_,_,D), #count{Y : containerOK(Y,N)}!=3, numMaxMosse(D).
+
+in(vuota,X,Y,M) :- muovi(_,X,Y,_,_,M).
+in(C,X,Y,M) :- muovi(C,_,_,X,Y,M).
+in(C,X,Y,M) :- mosse(W), in(C,X,Y,W), not muoviOrigine(X,Y,M), not muoviDestinazione(X,Y,M), M=W+1.
